@@ -51,6 +51,64 @@ streamlit run app.py
 
 Open the URL printed by Streamlit (typically `http://localhost:8501`).
 
+### Run with recommended settings (uploads, proxies)
+For best results when exposing via a tunnel (ngrok/cloudflared) and handling larger uploads:
+
+```bash
+streamlit run app.py \
+  --server.maxUploadSize=200 \
+  --server.enableXsrfProtection=false \
+  --server.enableCORS=false
+```
+
+Optional: persist these settings by creating `.streamlit/config.toml`:
+
+```toml
+[server]
+maxUploadSize = 200
+enableXsrfProtection = false
+enableCORS = false
+```
+
+Then you can simply run:
+
+```bash
+streamlit run app.py
+```
+
+### Expose locally via ngrok (recommended for quick sharing)
+1) Install and set your authtoken:
+
+```bash
+brew install ngrok/ngrok/ngrok
+ngrok config add-authtoken <YOUR_AUTHTOKEN>   # from https://dashboard.ngrok.com/get-started/your-authtoken
+```
+
+2) Start the tunnel (with basic auth and disabled inspector):
+
+```bash
+ngrok http 8501 \
+  --basic-auth "testuser:1234pass" \
+  --inspect=false \
+  --host-header=rewrite
+```
+
+3) Share the printed https URL. Visitors will be prompted for the username/password you set.
+
+Notes:
+- `--inspect=false` prevents ngrok from storing request/response bodies for the web inspector.
+- If uploads fail, ensure you started Streamlit with the flags above (or via config.toml). You can also add `--request-header-add "X-Forwarded-Proto: https"` to ngrok if needed.
+
+### Alternative: Cloudflare Quick Tunnel
+If ngrok isn’t an option, you can expose without login/cert setup:
+
+```bash
+brew install cloudflared
+cloudflared tunnel --url http://localhost:8501 --protocol http2 --edge-ip-version 4
+```
+
+Copy the printed URL. Keep the terminal open. On strict networks blocking QUIC, the `--protocol http2` flag helps.
+
 ### Using the app
 - Translate Text: paste text, auto-detect source or select, pick target, and translate. Toggle streaming in sidebar.
 - Translate File: upload `.txt`, `.md`, `.docx`, or `.pdf` and download as `.txt` or `.docx`.
