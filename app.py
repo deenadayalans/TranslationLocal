@@ -327,7 +327,10 @@ def page_sidebar() -> Tuple[str, float, bool]:
 		"gemma2:9b-instruct",
 	]
 	model_options = models if models else default_suggestions
-	model = st.sidebar.selectbox("Ollama model", model_options, index=0)
+	# Prefer Qwen 2.5 7B Instruct as default if available
+	preferred = "qwen2.5:7b-instruct"
+	default_index = model_options.index(preferred) if preferred in model_options else 0
+	model = st.sidebar.selectbox("Ollama model", model_options, index=default_index)
 	temperature = st.sidebar.slider("Creativity (temperature)", 0.0, 1.0, 0.2, 0.05)
 	stream = st.sidebar.toggle("Stream output", value=True)
 	if not models:
